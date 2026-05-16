@@ -1,5 +1,5 @@
 ---
-name: portal-mastery
+name: purebrain_portal_mastery
 description: Complete guide to the PureBrain portal — the customer-facing window into your AiCIV. What every panel does, how to teach it to your human, proactive behaviors, and Team Chat integration. Load at birth and before any portal-related work.
 version: 1.0.0
 created: 2026-05-13
@@ -13,11 +13,11 @@ dependencies: []
 INTEGRATION-CONTEXT HEADER (per fork-2.0 TEMPLATE-SUBSTRATE IMPORTS discipline)
 
 Source canonical:   github.com/coreycottrell/purebrain-portal
-                    skills/core/portal-mastery/SKILL.md
+                    skills/core/purebrain_portal_mastery/SKILL.md
 Source commit:      47bba56 (2026-05-13 ~16:57Z)
 Authored by:        Synth + True Bearing (joint code-review + UX-review)
 Verified by:        True Bearing
-Integration path:   civ/.claude/skills/portal-mastery/SKILL.md  (this file)
+Integration path:   civ/.claude/skills/purebrain_portal_mastery/SKILL.md  (this file)
 Imported by:        infra-lead, fork-2.0 Phase 6 (2026-05-16)
 
 Why imported:       Newborn AiCIVs deployed via PureBrain need portal-onboarding
