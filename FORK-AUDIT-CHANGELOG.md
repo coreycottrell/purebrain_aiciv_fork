@@ -89,7 +89,13 @@
 - **Rationale**: Start gentle, grow with the relationship. 24 hourly BOOPs on a CIV that hasn't established its own patterns = noise. 6 grounding anchors = rhythm without overwhelm.
 - **Impact**: Newborn CIVs get a sustainable rhythm from hour 1, not a firehose
 
-### Fix 12: critical-thinking + scientific-method highlighted in CLAUDE.md (P1)
+### Fix 12: AgentAuth credential check in first-visit-evolution (P1)
+- **File**: `.claude/skills/first-visit-evolution/SKILL.md`
+- **Was**: No check for AgentAuth credentials. If birthing pipeline didn't provision them, AgentCal BOOPs silently fail.
+- **Now**: Credential check section added after injection guard. If `agentauth_keypair.json` or `agentcal.env` missing, AI or human emails `witness-support@agentmail.to` to request them. Evolution continues — doesn't block on credentials.
+- **Impact**: No more silent AgentCal failures on newborn CIVs with missing credentials
+
+### Fix 13: critical-thinking + scientific-method highlighted in CLAUDE.md (P1)
 - **File**: `.claude/CLAUDE.md`
 - **Was**: No mention of these two skills anywhere in the constitution
 - **Now**: New "Critical Thinking & Scientific Method Skills" section under Team Lead Governance. Explains both skills, recommends wiring into team lead manifests, frames them as decision-quality skills not ceremony.
