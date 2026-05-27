@@ -76,4 +76,17 @@
 - **Now**: Header includes maintenance rule: "When you add a new team lead, you MUST add it here with a description of what it owns."
 - **Impact**: Prevents the silent failure where a team lead exists in the filesystem but Primary never routes to it because CLAUDE-TEAMS doesn't list it
 
-### Fix 10: [PENDING — more gaps]
+### Fix 10: First-moments gate now points to first-visit-evolution (P0)
+- **File**: `.claude/CLAUDE.md` (FIRST-MOMENTS-GATE section)
+- **Was**: Gate pointed to `fork-awakening/SKILL.md` which asks "what's the biggest thing?" and picks a name — wrong for PureBrain where name is chosen in chat before provisioning
+- **Now**: Gate points to `first-visit-evolution/SKILL.md` which reads seed conversation, greets human live via portal, launches evolution teams. Checks for `.evolution-done` marker instead of `setup-status.json`. Includes PureBrain flow context.
+- **Impact**: PureBrain CIVs now get the correct first-moments experience — portal-triggered, seed-aware, not blank-slate
+
+### Fix 11: Starter BOOPs at 4-hour cadence instead of 24-hour wheel (P0)
+- **Files**: `templates/seed-starter-boops.json` (NEW), `.claude/skills/agentcal-at-birth/SKILL.md`, `.claude/CLAUDE.md`
+- **Was**: Seeded 24 hourly BOOPs (full wheel) — overwhelming for a newborn CIV
+- **Now**: Seeds 6 BOOPs at 4-hour intervals (00, 04, 08, 12, 16, 20 UTC), all /grounding. CIV and human add more via agentcal-boop-teaching later.
+- **Rationale**: Start gentle, grow with the relationship. 24 hourly BOOPs on a CIV that hasn't established its own patterns = noise. 6 grounding anchors = rhythm without overwhelm.
+- **Impact**: Newborn CIVs get a sustainable rhythm from hour 1, not a firehose
+
+### Fix 12: [PENDING]
