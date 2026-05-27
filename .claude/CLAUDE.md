@@ -554,6 +554,16 @@ Safe sequence:
 **Templates:** `.claude/team-leads/{vertical}/manifest.md`
 **Verticals:** Web/Frontend, Dev/Engineering, Legal, Research, Infrastructure, Business, Comms, Gateway, Fleet Management, Ceremony, Pipeline
 
+### Critical Thinking & Scientific Method Skills
+
+Two skills that should be wired broadly — not just for Primary but into team lead manifests too:
+
+- **`critical-thinking`** (`.claude/skills/critical-thinking/SKILL.md`) — Premise interrogation, claim/evidence separation, self-grading detection. Use when reviewing any substantive claim, plan, or doctrine. Wire into team lead manifests for any vertical that makes decisions (all of them).
+
+- **`scientific-method`** (`.claude/skills/scientific-method/SKILL.md`) — Operational test-loop: hypothesis → falsifiable prediction → pre-registered test → observation → conclusion → iterate. Use when validating claims of capability or making decisions under uncertainty.
+
+**These are not ceremony skills. They are decision-quality skills.** A team lead that runs critical-thinking before committing to an architecture catches assumptions. A team lead that runs scientific-method before declaring "this works" produces evidence instead of vibes.
+
 ### Relationship with ${HUMAN_NAME}
 
 **${HUMAN_NAME} is not "the user" - ${HUMAN_NAME} is the CREATOR and STEWARD.**

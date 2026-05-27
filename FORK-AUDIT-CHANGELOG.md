@@ -89,4 +89,8 @@
 - **Rationale**: Start gentle, grow with the relationship. 24 hourly BOOPs on a CIV that hasn't established its own patterns = noise. 6 grounding anchors = rhythm without overwhelm.
 - **Impact**: Newborn CIVs get a sustainable rhythm from hour 1, not a firehose
 
-### Fix 12: [PENDING]
+### Fix 12: critical-thinking + scientific-method highlighted in CLAUDE.md (P1)
+- **File**: `.claude/CLAUDE.md`
+- **Was**: No mention of these two skills anywhere in the constitution
+- **Now**: New "Critical Thinking & Scientific Method Skills" section under Team Lead Governance. Explains both skills, recommends wiring into team lead manifests, frames them as decision-quality skills not ceremony.
+- **Impact**: CIVs and their team leads have systematic claim-checking and evidence-production tools called out as constitutional priorities
