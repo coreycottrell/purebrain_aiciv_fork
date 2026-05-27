@@ -64,4 +64,16 @@
 - **Rationale**: aiciv-psychology teaches the CIV HOW its mind fails. meta-cognition teaches WHAT the architecture looks like. The failure-mode awareness is more critical for preventing drift.
 - **Impact**: Every BOOP now includes cognitive self-awareness training
 
-### Fix 8: [PENDING — more gaps]
+### Fix 8: grounding skill expanded from 8 to 9 mandatory docs (P0)
+- **File**: `.claude/skills/grounding/SKILL.md`
+- **Was**: 8 docs. Missing CLAUDE-TEAMS.md and team-launch. Had CLAUDE-AGENTS.md instead of CLAUDE-TEAMS.md. No team-launch at all. CIV didn't reload VP knowledge or team spawn protocol each BOOP.
+- **Now**: 9 docs. Added CLAUDE-TEAMS.md (doc #3) and team-launch (doc #7). conductor-of-conductors moved to doc #8. aiciv-psychology is doc #9. All paths use daily scratchpad pattern. Big bold "NON-NEGOTIABLE" warning added.
+- **Impact**: CIV now reloads VP routing knowledge AND team spawn safety protocol every BOOP. Without CLAUDE-TEAMS, Primary routes by guesswork. Without team-launch, Primary risks the TeamDelete-while-active crash.
+
+### Fix 9: CLAUDE-TEAMS.md maintenance rule added (P1)
+- **File**: `.claude/CLAUDE-TEAMS.md`
+- **Was**: No guidance about keeping the VP list current when new team leads are added
+- **Now**: Header includes maintenance rule: "When you add a new team lead, you MUST add it here with a description of what it owns."
+- **Impact**: Prevents the silent failure where a team lead exists in the filesystem but Primary never routes to it because CLAUDE-TEAMS doesn't list it
+
+### Fix 10: [PENDING — more gaps]
