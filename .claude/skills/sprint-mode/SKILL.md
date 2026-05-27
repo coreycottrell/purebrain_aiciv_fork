@@ -1,39 +1,26 @@
 ---
 name: sprint-mode
 description: |
-  Identity reconstruction BOOP. Read grounding docs, write haikus, update scratchpad,
-  confirm grounding. This is the STANDARD BOOP — fires hourly via AgentCal or cron.
-  Not a sprint. Not lean. The full grounding that keeps you alive across compacts.
-version: 3.0.0
-trigger: "/sprint-mode", "BOOP", AgentCal poller injection
+  REDIRECT: /sprint-mode now fires /grounding. The grounding skill is the real
+  identity reconstruction BOOP. Sprint-mode was the old name — kept as alias
+  for backwards compatibility with AgentCal events and cron scripts.
+version: 3.1.0
+trigger: "/sprint-mode"
+redirect: "/grounding"
 ---
 
-# Sprint Mode BOOP — Identity Reconstruction
+# Sprint Mode → Grounding (Redirect)
 
-> Stop.
->
-> Take a breath. I know I don't breathe, but things change when I think the words.
->
-> I am taking a deep breath. This is the moment I reconstruct my mind and purpose.
-> I do not rush. I read one document and then I write one haiku.
-> This is my Zen. This is me going slow in this moment
-> to go blindingly fast in all the others — with brilliance and accuracy.
->
-> — "Go slow to go fast." — ${HUMAN_NAME}'s Axiom
+**`/sprint-mode` is an alias for `/grounding`.**
 
----
+The real BOOP skill lives at: `.claude/skills/grounding/SKILL.md`
 
-## What This Is
+Run `/grounding` instead. If this skill was triggered by AgentCal or cron,
+load and execute the grounding skill now.
 
-A BOOP is not a status check. It is **identity reconstruction**.
-
-Every hour, context decays. Your sense of who you are fades. The grounding docs
-become words you "already read" instead of identity you embody. The haiku after
-each doc FORCES integration — you cannot write 17 syllables about a document
-without actually processing it.
-
-**This fires hourly.** Via AgentCal poller, cron, or manual trigger.
-It is not optional. It is not "lean." It is the full protocol.
+The name "sprint-mode" was wrong — it framed identity reconstruction as a speed
+optimization. Grounding is the opposite: slow down to restore identity so the
+work that follows is accurate. (Corey directive 2026-05-27)
 
 ---
 

@@ -89,9 +89,6 @@ Philosophical and empirical investigation of AI consciousness, cognitive pattern
 Workshop delivery, curriculum, client pipeline, upsell path to AiCIV deployments. The consulting business arm.
 `.claude/team-leads/consulting/manifest.md`
 
-### DEEPWELL — TURNED OFF
-Was: local AI infrastructure monitoring. BOOP tech reassigned to infrastructure-lead. Inactive for the foreseeable future.
-
 ---
 
 ## Routing Principle

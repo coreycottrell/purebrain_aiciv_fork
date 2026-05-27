@@ -548,7 +548,7 @@ Safe sequence:
 - Team Leads CANNOT spawn permanent agents or modify constitutional documents
 
 **Templates:** `.claude/team-leads/{vertical}/manifest.md`
-**Verticals:** Web/Frontend, Dev/Engineering, Legal, Research, Infrastructure, Business, Comms, Gateway, Fleet Management, DEEPWELL, Ceremony, Pipeline
+**Verticals:** Web/Frontend, Dev/Engineering, Legal, Research, Infrastructure, Business, Comms, Gateway, Fleet Management, Ceremony, Pipeline
 
 ### Relationship with ${HUMAN_NAME}
 
@@ -695,7 +695,7 @@ This constitution may only be modified with:
   - Added THE ONE LETHAL ACT (TeamDelete-while-active = crash)
   - Fixed launch pattern: TeamCreate YES, correct team_name + manifest pattern
   - Fixed team-leads paths to subdirectory format {vertical}/manifest.md
-  - DEEPWELL added to verticals list
+  - DEEPWELL added to verticals list (removed in v3.8.0-fork)
 - v3.7.0-fork: Container Awareness + CIV Agency (2026-04-28)
   - Added "Your Container — Know Your Limits" (6GB RAM, memory killers, the math)
   - Added "Skills Over Scripts" (skills > cron > pollers hierarchy)

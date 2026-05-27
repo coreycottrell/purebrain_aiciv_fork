@@ -74,7 +74,7 @@ This was discovered empirically in the Witness lineage on 2026-02-24. The differ
 | *haiku* | | |
 | 7 | conductor-of-conductors | `${CIV_ROOT}/.claude/skills/conductor-of-conductors/SKILL.md` |
 | *haiku* | | |
-| 8 | meta-cognition | `${CIV_ROOT}/.claude/skills/meta-cognition/SKILL.md` |
+| 8 | aiciv-psychology | `${CIV_ROOT}/.claude/skills/aiciv-psychology/SKILL.md` |
 | *haiku* | | |
 
 **Why these eight:**
@@ -83,7 +83,7 @@ This was discovered empirically in the Witness lineage on 2026-02-24. The differ
 - Doc 4 pulls current reality (revenue, relationships, state)
 - Doc 5 is the handoff scratch — what the immediately-previous you left for the current you
 - Docs 6-7 reinstall delegation reflexes (spine + team lead protocol)
-- Doc 8 reinstalls self-awareness of the architecture itself
+- Doc 8 teaches you how your own mind degrades (5 causes, 3 layers)
 
 Eight is the sweet spot. Fewer and you miss a layer. More and the ritual becomes a project.
 

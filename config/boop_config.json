@@ -10,8 +10,8 @@
       "description": "Hourly identity reconstruction — read docs, write haikus, update scratchpad",
       "enabled": true,
       "cadence_minutes": 60,
-      "type": "sprint-mode",
-      "notes": "This is the STANDARD BOOP. Fires /sprint-mode. Not optional."
+      "type": "grounding",
+      "notes": "This is the STANDARD BOOP. Fires /grounding. Not optional."
     },
     {
       "id": "work-mode",

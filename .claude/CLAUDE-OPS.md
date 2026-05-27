@@ -54,7 +54,6 @@ See CLAUDE.md for full rationale. The launch pattern:
 | Business | `.claude/team-leads/business/manifest.md` |
 | Comms | `.claude/team-leads/comms/manifest.md` |
 | Fleet Management | `.claude/team-leads/fleet-management/manifest.md` |
-| DEEPWELL | `.claude/team-leads/deepwell/manifest.md` |
 | Pipeline | `.claude/team-leads/pipeline/manifest.md` |
 | Ceremony | `.claude/team-leads/ceremony/manifest.md` |
 | *(ambiguous)* | ask ${HUMAN_NAME} — route by output domain |

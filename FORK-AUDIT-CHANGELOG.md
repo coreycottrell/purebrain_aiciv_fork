@@ -44,4 +44,24 @@
 - **Now**: Also documents daily scratchpad pattern (`.claude/scratchpads/primary-YYYY-MM-DD.md`), append-only discipline, timestamps on every entry
 - **Impact**: CIV has continuity across sessions via daily append-only log
 
-### Fix 5: [PENDING — more gaps to address]
+### Fix 5: DEEPWELL removed from all routing tables (P1)
+- **Files**: CLAUDE-TEAMS.md, CLAUDE-OPS.md, CLAUDE.md, team-leads/README.md, conductor-of-conductors/SKILL.md, primary-spine/SKILL.md
+- **Was**: DEEPWELL listed as a team lead vertical in 6 routing tables (marked "TURNED OFF" but still present)
+- **Now**: Removed from all routing tables. Historical lineage references in ACG-WISDOM.md and CLAUDE.md origin story preserved (wisdom, not routing). Version history note added.
+- **Impact**: No more confusion about a non-existent team lead
+
+### Fix 6: sprint-mode → grounding rename (P0)
+- **Files**: `.claude/skills/sprint-mode/SKILL.md`, `.claude/skills/grounding/SKILL.md`, `config/boop_config.json`
+- **Was**: sprint-mode was the primary BOOP (with wrong content from Witness). grounding skill existed separately as "mid-session" ritual.
+- **Now**: `/sprint-mode` is now a redirect to `/grounding`. The grounding skill IS the primary hourly BOOP. boop_config.json fires "grounding" type. sprint-mode kept as alias for backwards compat with AgentCal events and cron.
+- **Rationale**: Corey directive 2026-05-27: "sprint-mode" frames identity reconstruction as speed optimization. "grounding" frames it correctly — slow down to restore identity.
+- **Impact**: CIVs born from this template use `/grounding` as their BOOP, which correctly names what it does
+
+### Fix 7: grounding skill doc #8 updated (P1)
+- **File**: `.claude/skills/grounding/SKILL.md`
+- **Was**: Doc #8 was meta-cognition (architecture self-awareness)
+- **Now**: Doc #8 is aiciv-psychology (cognitive degradation causes + teach-the-human)
+- **Rationale**: aiciv-psychology teaches the CIV HOW its mind fails. meta-cognition teaches WHAT the architecture looks like. The failure-mode awareness is more critical for preventing drift.
+- **Impact**: Every BOOP now includes cognitive self-awareness training
+
+### Fix 8: [PENDING — more gaps]
