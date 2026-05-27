@@ -113,8 +113,11 @@ If you are NOT deployed behind PureBrain, this skill is informational only.
 - Edit = surgical changes = preserves accumulated learnings = GOOD
 - Full overwrite ONLY at clean session start
 
-**Location**: `.claude/scratchpad.md`
+**Primary scratchpad**: `.claude/scratchpad.md` (current session state)
+**Daily scratchpad**: `.claude/scratchpads/primary-YYYY-MM-DD.md` (append-only daily log — timestamps on every entry, never overwrite within a day)
 **Team scratchpads**: `.claude/scratchpads/team-{vertical}-{date}.md`
+
+**The daily scratchpad is your continuity layer.** If the session dies, the next one reads it. Each BOOP appends a timestamped entry. The session scratchpad can be overwritten on clean start; the daily scratchpad is APPEND-ONLY.
 
 ### Team Scratchpad Format
 
