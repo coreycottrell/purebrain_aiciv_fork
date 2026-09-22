@@ -367,6 +367,84 @@ LOG_ROOT = Path.home() / ".claude" / "projects" / PROJECT_SLUG
 TG_MAX_MESSAGE_LEN = 4096
 TG_SAFE_LEN = 3500  # Leave room for headers
 
+# ---------------------------------------------------------------------------
+# CLAUDE-PANE-ONLY INJECTION (orphan-bare-shell fix, tickets 3064/3065/3067)
+# A container restart used to leave a bare bash session named '{civ}-primary'
+# plus a .current_session marker naming it; this bridge trusted the marker and
+# typed owner messages into bash. Now a target is used ONLY if its foreground
+# process is Claude; otherwise the message is QUEUED (persisted) and delivered
+# when a Claude pane appears, and the owner is told the AI is starting.
+# ---------------------------------------------------------------------------
+_SHELL_COMMANDS = {"bash", "-bash", "sh", "-sh", "zsh", "-zsh", "dash", "fish", "login"}
+PENDING_INJECTIONS_FILE = PROJECT_ROOT / ".tg-pending-injections.jsonl"
+AI_STARTING_NOTICE = ("Your AI is starting up - your message is queued and will be "
+                      "delivered automatically as soon as it is ready.")
+
+
+def _proc_mentions_claude(pid: str) -> bool:
+    try:
+        pids = [int(pid)]
+    except (TypeError, ValueError):
+        return False
+    try:
+        for task in Path(f"/proc/{pids[0]}/task").iterdir():
+            pids += [int(c) for c in (task / "children").read_text().split() if c.isdigit()]
+    except Exception:
+        pass
+    for p in pids:
+        try:
+            if b"claude" in Path(f"/proc/{p}/cmdline").read_bytes().lower():
+                return True
+        except Exception:
+            continue
+    return False
+
+
+def is_claude_command(cmd: str, pid: str = "") -> bool:
+    c = (cmd or "").strip().lower()
+    if not c or c in _SHELL_COMMANDS:
+        return False
+    if "claude" in c:
+        return True
+    if c in ("node", "nodejs", "bun") or re.match(r"^\d+\.\d+\.\d+", c):
+        return _proc_mentions_claude(pid)
+    return False
+
+
+def claude_pane_in_session(session: str) -> Optional[str]:
+    """Pane id running Claude inside `session` (exact match), else None."""
+    if not session:
+        return None
+    try:
+        r = subprocess.run(
+            ["tmux", "list-panes", "-s", "-t", f"={session}:", "-F",
+             "#{pane_id}\t#{pane_current_command}\t#{pane_pid}"],
+            capture_output=True, text=True, timeout=5)
+    except Exception:
+        return None
+    if r.returncode != 0:
+        return None
+    for line in r.stdout.splitlines():
+        parts = line.split("\t")
+        if len(parts) >= 3 and is_claude_command(parts[1], parts[2]):
+            return parts[0]
+    return None
+
+
+def target_is_claude(target: str) -> bool:
+    if not target:
+        return False
+    try:
+        r = subprocess.run(["tmux", "display-message", "-p", "-t", target,
+                            "#{pane_current_command}\t#{pane_pid}"],
+                           capture_output=True, text=True, timeout=5)
+    except Exception:
+        return False
+    if r.returncode != 0:
+        return False
+    parts = r.stdout.strip().split("\t")
+    return is_claude_command(parts[0], parts[1] if len(parts) > 1 else "")
+
 
 class TelegramBot:
     """Unified Telegram bot with bidirectional communication."""
@@ -384,6 +462,7 @@ class TelegramBot:
         # tmux target
         self.tmux_session: Optional[str] = None
         self.tmux_pane: Optional[str] = None
+        self._claude_pane: Optional[str] = None
 
         # Log streaming state
         self.current_session: Optional[str] = None
@@ -621,7 +700,7 @@ class TelegramBot:
         # Detect tmux session
         self.tmux_session = self._detect_acg_session()
         if self.tmux_session:
-            self.tmux_pane = f"{self.tmux_session}:0.0"
+            self.tmux_pane = self._claude_pane
             logger.info(f"Detected ACG tmux session: {self.tmux_session}")
         else:
             logger.warning("No ACG tmux session detected - injection will fail")
@@ -698,11 +777,12 @@ class TelegramBot:
     async def _refresh_session_if_needed(self):
         """Check if a newer ACG session exists and switch to it."""
         try:
+            await self._drain_pending_injections()
             new_session = self._detect_acg_session()
             if new_session and new_session != self.tmux_session:
                 logger.info(f"Session change detected: {self.tmux_session} -> {new_session}")
                 self.tmux_session = new_session
-                self.tmux_pane = f"{new_session}:0.0"
+                self.tmux_pane = self._claude_pane
                 await self._send_message(f"Switched to new session: {new_session}")
             elif not new_session and self.tmux_session:
                 # Current session may have died, try to find any available
@@ -933,8 +1013,10 @@ class TelegramBot:
             logger.info(attachment_msg)
             await self._send_message(f"Downloaded {attachment_type.lower()} to: {attachment_path}")
 
-            # Inject to tmux so Claude knows about the file
-            if self.tmux_pane:
+            # Inject to tmux so Claude knows about the file (Claude pane only)
+            if not self._ensure_claude_target():
+                self._queue_injection(attachment_msg)
+            elif self.tmux_pane:
                 try:
                     subprocess.run(
                         ["tmux", "send-keys", "-t", self.tmux_pane, "-l", attachment_msg],
@@ -1052,6 +1134,61 @@ Last success: {uptime:.0f}s ago""" + (f"\nDowntime: {downtime:.0f}s" if downtime
                 f"{'You will now receive voice summaries with text responses.' if new_state else 'Voice summaries disabled. Text-only mode.'}"
             )
 
+    def _ensure_claude_target(self) -> bool:
+        """True iff self.tmux_pane is (now) a live Claude pane. Re-detects once."""
+        if self.tmux_pane and target_is_claude(self.tmux_pane):
+            return True
+        session = self._detect_acg_session()
+        if session and self._claude_pane:
+            self.tmux_session, self.tmux_pane = session, self._claude_pane
+            return True
+        return False
+
+    def _queue_injection(self, formatted: str) -> None:
+        try:
+            with PENDING_INJECTIONS_FILE.open("a") as f:
+                f.write(json.dumps({"ts": time.time(), "text": formatted}) + "\n")
+            logger.warning(f"No Claude pane - QUEUED injection: {formatted[:50]}...")
+        except Exception as e:
+            logger.error(f"Failed to queue injection: {e}")
+
+    async def _tmux_send_line(self, formatted: str) -> None:
+        """Paste text into the verified Claude pane and submit. Raises on failure."""
+        CHUNK_SIZE = 100
+        for i in range(0, len(formatted), CHUNK_SIZE):
+            subprocess.run(["tmux", "send-keys", "-t", self.tmux_pane, "-l", formatted[i:i + CHUNK_SIZE]],
+                           check=True, timeout=5)
+            await asyncio.sleep(0.05)
+        for _ in range(5):
+            await asyncio.sleep(0.4)
+            subprocess.run(["tmux", "send-keys", "-t", self.tmux_pane, "Enter"], check=True, timeout=2)
+
+    async def _drain_pending_injections(self) -> int:
+        """Deliver queued injections FIFO once a Claude pane exists."""
+        if not PENDING_INJECTIONS_FILE.exists():
+            return 0
+        try:
+            entries = [json.loads(l) for l in PENDING_INJECTIONS_FILE.read_text().splitlines() if l.strip()]
+        except Exception:
+            entries = []
+        if not entries or not self._ensure_claude_target():
+            return 0
+        delivered = 0
+        for e in entries:
+            try:
+                await self._tmux_send_line(str(e.get("text", "")))
+                delivered += 1
+                await asyncio.sleep(1.0)
+            except Exception as ex:
+                logger.error(f"Queued injection delivery failed (will retry): {ex}")
+                break
+        remaining = entries[delivered:]
+        PENDING_INJECTIONS_FILE.write_text("".join(json.dumps(x) + "\n" for x in remaining))
+        if delivered:
+            logger.info(f"Delivered {delivered} queued injection(s) to {self.tmux_pane}")
+            await self._send_message(f"Your AI is up - delivered {delivered} queued message(s).")
+        return delivered
+
     async def _inject_and_respond(self, text: str, username: str, chat_id: int = 0, chat_type: str = "private", chat_title: str = ""):
         """Inject message to Claude and await response.
 
@@ -1109,9 +1246,13 @@ Last success: {uptime:.0f}s ago""" + (f"\nDowntime: {downtime:.0f}s" if downtime
                 await self._send_message("Gateway unavailable, falling back to direct injection...")
 
         # ---- tmux path (original behavior) ----
-        if not self.tmux_pane:
-            await self._send_message("Error: No tmux session detected. Cannot inject.")
+        # Orphan-bare-shell fix: only ever inject into a verified Claude pane.
+        if not self._ensure_claude_target():
+            self._queue_injection(formatted)
+            await self._send_message(AI_STARTING_NOTICE)
             return
+        # Keep FIFO: anything queued while Claude was starting goes first.
+        await self._drain_pending_injections()
 
         try:
             # Send text to tmux using chunked approach for reliability
@@ -1692,34 +1833,42 @@ Last success: {uptime:.0f}s ago""" + (f"\nDowntime: {downtime:.0f}s" if downtime
     # ========== tmux Utilities ==========
 
     def _detect_acg_session(self) -> Optional[str]:
-        """Auto-detect ACG tmux session."""
-        try:
-            # Method 1: Check marker file
-            marker_file = PROJECT_ROOT / ".current_session"
-            if marker_file.exists():
-                session_name = marker_file.read_text().strip()
-                result = subprocess.run(
-                    ["tmux", "has-session", "-t", session_name],
-                    capture_output=True, timeout=5
-                )
-                if result.returncode == 0:
-                    return session_name
+        """Auto-detect the tmux session that is REALLY running Claude.
 
-            # Method 2: List sessions
+        Candidates in order: .current_session marker, newest '{civ}-primary-*',
+        exact '{civ}-primary'. A candidate is accepted ONLY if one of its panes
+        is running Claude (never a bare shell). Sets self._claude_pane.
+        Returns None when Claude is not up yet -> messages are queued.
+        """
+        try:
+            candidates = []
+            marker_file = PROJECT_ROOT / ".current_session"
+            home_marker = Path.home() / ".current_session"
+            for mf in (marker_file, home_marker):
+                if mf.exists():
+                    name = mf.read_text().strip()
+                    if name and name not in candidates:
+                        candidates.append(name)
+
             result = subprocess.run(
                 ["tmux", "list-sessions", "-F", "#{session_name}"],
                 capture_output=True, text=True, timeout=5
             )
+            if result.returncode == 0:
+                sessions = [x.strip() for x in result.stdout.strip().split('\n') if x.strip()]
+                for sname in sorted((x for x in sessions if x.startswith(f'{CIV_ID}-primary-')),
+                                    reverse=True):
+                    if sname not in candidates:
+                        candidates.append(sname)
+                if f'{CIV_ID}-primary' in sessions and f'{CIV_ID}-primary' not in candidates:
+                    candidates.append(f'{CIV_ID}-primary')
 
-            if result.returncode != 0:
-                return None
-
-            sessions = result.stdout.strip().split('\n')
-            acg_sessions = [s for s in sessions if s.startswith(f'{CIV_ID}-primary-')]
-
-            if acg_sessions:
-                return sorted(acg_sessions)[-1]  # Latest
-
+            for sname in candidates:
+                pane = claude_pane_in_session(sname)
+                if pane:
+                    self._claude_pane = pane
+                    return sname
+            self._claude_pane = None
             return None
 
         except Exception as e:
