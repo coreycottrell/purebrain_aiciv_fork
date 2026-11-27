@@ -1,11 +1,27 @@
 ---
 name: team-launch
-description: Definitive team launch protocol — empirically validated 2026-02-19. TeamCreate + Task(team_name) = real separate Claude instances. TeamDelete after empty team = safe. Use before every orchestration session.
+description: "RETIRED-IN-PLACE (2026-07-26): the TeamCreate / Task(team_name) / TeamDelete + tmux-pane spawn mechanism described here is OBE; use paneless Workflow agents (see workflows/). Kept only for the still-binding disciplines: mandatory skills, critical-thinking, rate-limit stagger, summaries-only."
 version: 1.0.0
 validated: 2026-02-19
 ---
 
 # Team Launch — Definitive Protocol
+
+## 🟥 RETIRED-IN-PLACE (2026-07-26) — READ THIS FIRST
+
+**The TeamCreate → `Task(team_name)` → TeamDelete spawn *mechanism* taught below is RETIRED (OBE).** It described each team lead as a separate Claude instance in its own tmux pane, supervised by reading that pane. That is no longer how leads run. Do NOT follow the spawn, supervise-by-pane or shutdown-by-pane steps below.
+
+**The live pattern is the PANELESS Workflow agent**: leads run as in-process background workflow agents. There is no tmux pane, no team to delete, nothing to shut down by pane. Supervise by the lead's structured return and run record. **Supervising a pane that does not exist fails quiet and reports healthy** — that is why this banner is first.
+
+**STILL BINDING regardless of spawn mechanism:**
+- Mandatory skill loading per vertical (leads load their domain skills every spawn).
+- Critical-thinking + scientific method for all diagnosis.
+- The rate-limit stagger: launch concurrent agents in batches, not all at once. Bursts have caused day-long rate-limit bans.
+- Only summaries reach the podium (the context firewall).
+- Memory budget: concurrent agents share ONE container's memory cap. Measure it (`/sys/fs/cgroup/memory.max`, `memory.current`) before wide fan-out.
+
+---
+
 
 > Empirically validated 2026-02-19. Haiku test confirmed full cycle works.
 

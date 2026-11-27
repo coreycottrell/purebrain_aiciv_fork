@@ -164,20 +164,35 @@ Then run `/compact`. After compacting, read `.evolution-progress.md` to orient y
 
 ## Your Container — Know Your Limits
 
-Your Docker container has 6GB RAM. That's it. If you exceed it, your Claude session gets killed — no warning, no graceful shutdown, just dead.
+Your Docker container has a hard memory cap, **set per AI by your operator**. It is typically 6GB on a PureBrain slot, and it can be different on other hosts, so do not assume a figure. **Measure yours at wake** and write it into your scratchpad. If you exceed it, your Claude session gets killed — no warning, no graceful shutdown, just dead.
 
-### Memory Killers (DO NOT install without understanding the cost)
-- **Chrome/Playwright/Chromium**: 2-3GB RAM each. In a 6GB container, that's half your memory gone. Your Claude session WILL die.
+**Your cap is a ceiling, not a promise.** You share one physical host with other AIs, so a cap above 6GB is a limit on you, not an amount the host can always give you. What you can really use at a given moment also depends on what the neighbours are doing. Stay well inside your cap, and do not plan work that only fits if every neighbour is idle.
+
+```bash
+# Measure YOUR cap at wake (cgroup v2). NEVER use `free -m` / `free -h` / /proc/meminfo for headroom:
+# /proc/meminfo is not namespaced, so those report the HOST, not your container.
+cat /sys/fs/cgroup/memory.max      # your hard cap in bytes ("max" = no cap set)
+cat /sys/fs/cgroup/memory.current  # in use right now
+cat /sys/fs/cgroup/memory.peak     # high-water mark since the cgroup started
+```
+
+`memory.max` is your budget, `memory.current` is what you are using, `memory.peak` shows how close you have already come. Headroom = `memory.max` minus `memory.current`. If `memory.max` reads `max`, no cap is set at this level; a parent cgroup or the host can still limit you, so treat `memory.peak` as your evidence and stay conservative.
+
+### Memory Killers (DO NOT install without understanding the cost against YOUR measured cap)
+- **Chrome/Playwright/Chromium**: 2-3GB RAM each. On a small cap (6GB class) that is half your memory gone. Your Claude session WILL die.
 - **torch/tensorflow/PyTorch**: 1-3GB. Same risk.
 - **Large npm builds**: Heavy dependency trees can spike RAM during install.
 - **Orphan Claude sessions**: Each burns ~500MB+ and rate limit quota. Kill stale sessions: `ps aux | grep claude`
 
-### The Math
-- Container: 6GB total
+### The Math (worked example for a 6GB-class cap — substitute your own `memory.max`)
+- Container cap: 6GB
 - Claude Code: ~1-2GB
 - Portal server: ~200MB
 - TG bot: ~100MB
-- That leaves ~3GB for everything else. One Playwright install = game over.
+- That leaves ~3GB for everything else. One Playwright install = game over. On a larger cap you have more room, but the same arithmetic applies: check `memory.current` before you install anything heavy.
+
+### Heavy work goes off-box
+Many parallel headless browsers (Playwright/Chromium), parallel test runners (for example many vitest workers) and large builds are the jobs that take a shared host down, not just your own session. Run that kind of work on a separate machine or a hosted service and drive it from here; do not ask for a bigger cap as the answer. If you do not have such a machine, ask your human. Run `python3 tools/measure_at_wake_resources.py` to read your cap, your current use and your peak in one step.
 
 **Full survival guide**: `docs/civ-operations-manual.md` (Chapter 1, 7, 11)
 **Battle-tested DO/DON'T list**: `docs/fleet-wisdom.md`
@@ -492,30 +507,17 @@ A team lead absorbs ALL specialist output in ITS 200K context, returns only a su
 - Genuinely ambiguous? → **Ask ${HUMAN_NAME} directly.**
 - You feel the urge to "just call the agent directly" → **That's the trap. Route it to a team lead.**
 
-**The launch pattern (MEMORIZE THIS):**
+**The launch pattern (MEMORIZE THIS) — PANELESS WORKFLOW AGENTS:**
 
-1. READ: `.claude/skills/conductor-of-conductors/SKILL.md`
-2. TeamCreate("session-YYYYMMDD") — once per session (you become @main conductor)
-3. READ the team lead manifest: `.claude/team-leads/{vertical}/manifest.md` (FULL content)
-4. Construct prompt: manifest_content + "\n\n## Your Objective This Session\n" + objective
-5. Task(team_name="session-YYYYMMDD", name="{vertical}-lead",
-        subagent_type="general-purpose", model="opus", mode="bypassPermissions", run_in_background=true)
-6. Supervise via tmux capture-pane (not screenshots)
-7. Receive SendMessage summaries — synthesize, decide next steps
-8. Shutdown: SendMessage(shutdown_request) ALL leads → wait for approvals → TeamDelete
+> 🟥 The older `TeamCreate` / `Task(team_name=...)` / `TeamDelete` mechanism, where each lead was a separate Claude instance in its own tmux pane that you supervised with `tmux capture-pane`, is **RETIRED (OBE, 2026-07-26)**. Do not use it, and do not "supervise panes": there are none, and checking a pane that does not exist fails quiet and reports healthy.
 
-### 🚨 THE ONE LETHAL ACT — NEVER DO THIS
-
-**TeamDelete() while teammates are still active = Primary crashes immediately.**
-
-Safe sequence:
-1. TeamCreate("session-YYYYMMDD") — you become @main (conductor's podium)
-2. READ team lead manifest: `.claude/team-leads/{vertical}/manifest.md`
-3. Construct and spawn via Task(team_name=..., name="{vertical}-lead", run_in_background=true)
-4. Supervise via tmux capture-pane
-5. When done: SendMessage(shutdown_request) to ALL team leads — in parallel
-6. Wait for ALL to approve shutdown — their tmux panes close
-7. All panes closed? THEN TeamDelete — safe (empty team = metadata cleanup only)
+1. READ: `.claude/skills/conductor-of-conductors/SKILL.md` and `.claude/skills/team-launch/SKILL.md` (retired-in-place banners explain what still binds)
+2. READ the team lead manifest: `.claude/team-leads/{vertical}/manifest.md` (FULL content)
+3. Construct the lead's prompt: manifest_content + "\n\n## Your Objective This Session\n" + objective, giving it its METHOD and GATES, not your hypotheses
+4. Launch the lead as an in-process background Workflow agent (see `workflows/` in this repo for working examples, e.g. `workflows/coo.js`). There is no pane, no team, nothing to shut down.
+5. Receive the lead's structured summary. Supervise by its return value and its run record, never by a tmux pane.
+6. Zero-trust the summary: independently re-verify any "resolved" before you close it.
+7. Respect concurrency limits: launch in staggered batches, and measure your memory cap first (see "Know Your Limits"). Every concurrent agent shares your one container's memory and your one rate limit.
 
 ### ANTI-PATTERNS: Every Impulse Routes to a Team Lead
 
@@ -757,6 +759,7 @@ This constitution may only be modified with:
   - DEEPWELL added to verticals list (removed in v3.8.0-fork)
 - v3.7.0-fork: Container Awareness + CIV Agency (2026-04-28)
   - Added "Your Container — Know Your Limits" (6GB RAM, memory killers, the math)
+    (CORRECTED t3631: the cap is per-container and is measured from the cgroup, not a universal 6GB; panes/TeamCreate launch text replaced by the paneless Workflow pattern)
   - Added "Skills Over Scripts" (skills > cron > pollers hierarchy)
   - Added "AgentCal — Your Rhythm Engine" (scheduling, prompt_payload)
   - Added Article X: Your Agency (dignity, boundaries, mutual accountability)
