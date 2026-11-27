@@ -1,11 +1,28 @@
 # Conductor of Conductors — Definitive Operating Skill
 
-> **STATUS: ACTIVE PROTOCOL (validated 2026-02-19)**
+> **STATUS: SPAWN MECHANISM RETIRED-IN-PLACE (2026-07-26). The TeamCreate/tmux-pane protocol below is historical.**
+> **Original status line (validated 2026-02-19):**
 > Primary calls TeamCreate ONCE per session — gets the podium (@main conductor's role).
 > Primary spawns team leads as named teammates: Task(team_name=..., name="{vertical}-lead").
 > TeamDelete is safe ONLY after all teammates have approved shutdown. Not before.
 
 ---
+
+## 🟥 RETIRED-IN-PLACE (2026-07-26) — READ THIS FIRST
+
+**The TeamCreate → `Task(team_name)` → TeamDelete spawn *mechanism* taught below is RETIRED (OBE).** It described each team lead as a separate Claude instance in its own tmux pane, supervised by reading that pane. That is no longer how leads run. Do NOT follow the spawn, supervise-by-pane or shutdown-by-pane steps below.
+
+**The live pattern is the PANELESS Workflow agent**: leads run as in-process background workflow agents. There is no tmux pane, no team to delete, nothing to shut down by pane. Supervise by the lead's structured return and run record. **Supervising a pane that does not exist fails quiet and reports healthy** — that is why this banner is first.
+
+**STILL BINDING regardless of spawn mechanism:**
+- Mandatory skill loading per vertical (leads load their domain skills every spawn).
+- Critical-thinking + scientific method for all diagnosis.
+- The rate-limit stagger: launch concurrent agents in batches, not all at once. Bursts have caused day-long rate-limit bans.
+- Only summaries reach the podium (the context firewall).
+- Memory budget: concurrent agents share ONE container's memory cap. Measure it (`/sys/fs/cgroup/memory.max`, `memory.current`) before wide fan-out.
+
+---
+
 
 ## What This Skill Is
 

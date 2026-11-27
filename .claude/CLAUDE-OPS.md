@@ -27,19 +27,15 @@ Primary must read this for session operations and procedural knowledge.
 
 **If it CAN be done by a team, it MUST be done by a team. PERIOD.**
 
-See CLAUDE.md for full rationale. The launch pattern:
+See CLAUDE.md for full rationale. The launch pattern (TeamCreate / tmux-pane supervision is RETIRED, OBE 2026-07-26; leads are in-process Workflow agents with no pane):
 
 ```
-1. READ: `.claude/skills/conductor-of-conductors/SKILL.md`
-2. TeamCreate("session-YYYYMMDD") — once per session
-3. READ the team lead manifest: `.claude/team-leads/{vertical}/manifest.md` (FULL content)
-4. Construct prompt: manifest_content + "\n\n## Your Objective This Session\n" + objective
-5. Task(team_name="session-YYYYMMDD", name="{vertical}-lead",
-        subagent_type="general-purpose", model="sonnet",
-        run_in_background=true)
-6. Supervise via tmux capture-pane (not screenshots)
-7. SendMessage(shutdown_request) to ALL leads when done — wait for all approvals
-8. THEN TeamDelete — only after all approvals (TeamDelete-while-active = crash)
+1. READ: `.claude/skills/conductor-of-conductors/SKILL.md` (retired-in-place banner)
+2. READ the team lead manifest: `.claude/team-leads/{vertical}/manifest.md` (FULL content)
+3. Construct prompt: manifest_content + "\n\n## Your Objective This Session\n" + objective
+4. Launch the lead as a background Workflow agent (examples in `workflows/`)
+5. Supervise by the lead's structured return, never by a tmux pane (none exists)
+6. Zero-trust the summary: independently re-verify before closing
 ```
 
 **The team leads:**

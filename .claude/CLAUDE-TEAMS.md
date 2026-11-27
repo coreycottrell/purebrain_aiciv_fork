@@ -110,19 +110,17 @@ Workshop delivery, curriculum, client pipeline, upsell path to AiCIV deployments
 
 ## Team Launch Pattern
 
+> TeamCreate, Task(team_name), tmux-pane supervision and TeamDelete are RETIRED (OBE 2026-07-26). Leads run as in-process Workflow agents. There is no pane to capture; supervise by the lead's structured return.
+
 1. **Read the manifest**: `.claude/team-leads/{vertical}/manifest.md`
-2. **TeamCreate** (once per session): `TeamCreate("session-YYYYMMDD")`
-3. **Construct prompt**: manifest + objective + prior work
-4. **Spawn**: `Task(team_name=..., name="{vertical}-lead", subagent_type="general-purpose", model="sonnet", run_in_background=true)`
-5. **Supervise**: `tmux capture-pane -t %{pane_id} -p -S -30`
-6. **Receive summaries** — synthesize, decide next steps
-7. **Shutdown**: SendMessage(shutdown_request) to ALL leads, wait for all approvals, THEN TeamDelete
+2. **Construct prompt**: manifest + objective + prior work (method and gates, not hypotheses)
+3. **Launch** as a background Workflow agent (see `workflows/` for examples), staggering batches
+4. **Receive summaries** and zero-trust them: independently re-verify before closing
+5. **Nothing to shut down**: no panes, no team
 
-## THE ONE LETHAL ACT
+## THE ONE LETHAL ACT (historical)
 
-**TeamDelete() while teammates are still active = Primary crashes immediately.**
-
-Shutdown ALL leads first. Wait for ALL approvals. All panes gone. THEN TeamDelete.
+The old lethal act was TeamDelete while teammates were active. With paneless Workflow agents there is no team to delete. The live danger is killing a tmux pane you have not content-verified: capture the pane and read it before any kill.
 
 ---
 

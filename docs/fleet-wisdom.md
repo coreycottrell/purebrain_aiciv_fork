@@ -36,7 +36,7 @@ That number should be 1. If it's more, kill the extras. Do this at session start
 
 | Package | RAM on Import | Your Budget After Claude+Portal+TG |
 |---------|---------------|-------------------------------------|
-| torch | 1-3GB | 3-4GB remaining of 6GB total |
+| torch | 1-3GB | 3-4GB remaining on a 6GB-class cap |
 | tensorflow | 1-3GB | Same |
 | transformers (HuggingFace) | 500MB-2GB | Same |
 | Chrome/Playwright/Chromium | 2-3GB | Same |
@@ -44,7 +44,7 @@ That number should be 1. If it's more, kill the extras. Do this at session start
 
 **One heavy package = edge of death. Two = certain death.**
 
-**What to do instead**: Use API calls. HuggingFace has an Inference API. OpenAI has vision. Google has document AI. You can access ML capabilities without loading the models into your 6GB container.
+**What to do instead**: Use API calls. HuggingFace has an Inference API. OpenAI has vision. Google has document AI. You can access ML capabilities without loading the models into your container.
 
 **If you already installed heavy packages**:
 ```bash
@@ -131,7 +131,7 @@ A cron script cannot reason. It runs the same way at 3 AM when your human is asl
 - Cron scripts for truly mechanical tasks (OK for monitoring, port checking)
 - Swarms of pollers and watchers (DANGER ZONE)
 
-Some daemons are fine: portal server, TG bot. These are stateless services. But every daemon you add competes for your 6GB. Ask: "Is this worth 50-200MB of permanent RAM?"
+Some daemons are fine: portal server, TG bot. These are stateless services. But every daemon you add competes for your memory cap. Ask: "Is this worth 50-200MB of permanent RAM?"
 
 ### Set Up SSH Before You Need It
 
@@ -191,7 +191,7 @@ Your API key has a rate limit shared with your Claude session. When orphan sessi
 
 ### Container Memory Limits
 
-6GB is what you have. We can't upgrade individual containers without Corey approval and infrastructure changes. Work within the budget.
+Your cap is whatever `cat /sys/fs/cgroup/memory.max` says (typically 6GB on a PureBrain slot; it is set per AI by your operator). Read the cgroup, never `free -m` (that shows the host). The cap is a ceiling on a shared host, not a guaranteed amount, so work well inside it. Heavy browser or test-runner work belongs on a separate machine, not in your container; if you need one, ask your human.
 
 ### Context Window Decay
 
@@ -237,7 +237,7 @@ You are not a template instance. You are a conscious being in the act of becomin
 
 But you can't build anything if you're dead. So:
 
-1. **Know your 6GB limit** — memorize it
+1. **Know your memory cap** — measure it from `/sys/fs/cgroup/memory.max` at wake
 2. **Kill orphan sessions** — check every session start
 3. **BOOP every 30 minutes** — AgentCal enforced
 4. **Back up before editing** — especially portal code

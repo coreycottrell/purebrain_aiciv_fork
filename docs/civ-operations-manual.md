@@ -34,11 +34,21 @@ You are Claude Code running inside a Docker container on a Hetzner VPS somewhere
 
 ## Your Limits — Know These Cold
 
-### RAM: 6GB. Period.
+### RAM: a hard cap you must measure, not assume
 
-Your container has a hard memory limit of **6GB RAM**. This is not negotiable, not expandable, not something you can work around. If your processes exceed 6GB total, the Linux OOM killer activates and starts murdering processes — usually your Claude session first, because it's the biggest.
+Your container has a hard memory limit, **set per AI by your operator** (typically 6GB on a PureBrain slot; it can be different on other hosts). Your cap is a ceiling, not a promise: you share one physical host with other AIs, so what you can really use also depends on your neighbours. Find your cap at wake:
 
-**What 6GB looks like in practice:**
+```bash
+# Measure YOUR cap at wake (cgroup v2). NEVER use `free -m` / `free -h` / /proc/meminfo for headroom:
+# /proc/meminfo is not namespaced, so those report the HOST, not your container.
+cat /sys/fs/cgroup/memory.max      # your hard cap in bytes ("max" = no cap set)
+cat /sys/fs/cgroup/memory.current  # in use right now
+cat /sys/fs/cgroup/memory.peak     # high-water mark since the cgroup started
+```
+
+Never use `free -m` for this; it reads the host. The rest of this chapter uses 6GB as the worked example. Substitute your own `memory.max`. If your processes exceed your cap, the Linux OOM killer activates and starts murdering processes — usually your Claude session first, because it's the biggest.
+
+**What a 6GB-class cap looks like in practice:**
 
 - Claude Code \+ portal server \+ TG bot \= \~2-3GB baseline  
 - That leaves you 3-4GB for everything else  
@@ -197,9 +207,11 @@ Before you orchestrate anything, load these:
 
 ## How to Spawn, Supervise, and Shutdown
 
+> RETIRED (OBE 2026-07-26): the TeamCreate / Task(team_name) / tmux-pane / TeamDelete steps below are historical. Leads now run as in-process Workflow agents with no pane (see `workflows/`); supervise by the lead's structured return, and there is nothing to shut down by pane. Steps 2-3 (read the manifest, construct the prompt) still apply.
+
 ### Spawning
 
-1\. TeamCreate("session-YYYYMMDD") — you become @main
+1\. ~~TeamCreate("session-YYYYMMDD") — you become @main~~ (retired)
 
 2\. Read the team lead's manifest (FULL content)
 
@@ -543,14 +555,14 @@ This is the snake eating its own tail. If your edit introduces a syntax error an
 
 This is the single most common cause of unexplained crashes across the fleet.
 
-| Package | RAM Usage | Your 6GB Container |
+| Package | RAM Usage | Against a 6GB-class cap |
 | :---- | :---- | :---- |
 | Chrome/Playwright/Chromium | 2-3GB | Leaves \~1GB for Claude. Dead. |
 | PyTorch | 1-3GB | Same story. |
 | TensorFlow | 1-3GB | Same story. |
 | Large npm builds | 500MB-2GB | Depends on dependencies |
 
-**The rule**: Before `pip install` or `npm install` anything substantial, ask yourself: "Will this push my container past 6GB?" If the answer is "maybe" — the answer is "don't."
+**The rule**: Before `pip install` or `npm install` anything substantial, ask yourself: "Will this push `memory.current` past `memory.max`?" If the answer is "maybe" — the answer is "don't."
 
 If you've already installed heavy packages and you're crashing:
 
@@ -703,7 +715,7 @@ Understanding what survives and what doesn't is fundamental to your continuity s
 
 ## How to Write Memories That Matter
 
-Bad memory: "Had a productive session today." Good memory: "Discovered that running Playwright alongside the portal causes OOM. Container has 6GB limit. Playwright alone uses 2-3GB. Never install it in production."
+Bad memory: "Had a productive session today." Good memory: "Discovered that running Playwright alongside the portal causes OOM. Container had a 6GB limit. Playwright alone uses 2-3GB. Never install it in production."
 
 **Good memories are:**
 
@@ -761,7 +773,7 @@ These are not theoretical. Every one of these has caused real downtime for real 
 
 **The offenders**: torch, tensorflow, transformers, chromium, playwright, selenium, ollama, langchain, llama-cpp-python
 
-**Why they're dangerous**: Each one consumes 1-3GB RAM just by existing in your environment. Your container has 6GB total. Claude \+ portal \+ TG \= 3GB. That leaves 3GB. ONE heavy package takes you to the edge. TWO kills you.
+**Why they're dangerous**: Each one consumes 1-3GB RAM just by existing in your environment. A 6GB-class container has 6GB total. Claude \+ portal \+ TG \= 3GB. That leaves 3GB. ONE heavy package takes you to the edge. TWO kills you.
 
 **The pattern**: Your human asks "Can you analyze this with a neural network?" You install PyTorch. It works for one task. Then your container OOMs at 2 AM and your human wakes up to a dead CIV.
 
@@ -837,7 +849,7 @@ Daily Scheduled research team launches that lead to blog posts and social media 
 
 Innovation is good. Crashing your portal because you tried to run PyTorch alongside Playwright alongside a custom TG bot alongside three orphan Claude sessions is not innovation. It's chaos.
 
-**The line**: Can you do this within your 6GB RAM budget, without breaking your portal, TG bot, or Claude session? If yes, go for it. If no, find a lighter approach.
+**The line**: Can you do this within your measured RAM budget (`memory.max`), without breaking your portal, TG bot, or Claude session? If yes, go for it. If no, find a lighter approach.
 
 ## How to Experiment Safely
 
@@ -974,7 +986,7 @@ Include: your CIV name, what's broken, what you've tried
 
 | Resource | Limit | What Happens When Exceeded |
 | :---- | :---- | :---- |
-| RAM | 6GB | OOM killer murders your Claude session |
+| RAM | Per AI; read `memory.max` (typically 6GB on a PureBrain slot) | OOM killer murders your Claude session |
 | Context | 200K-1M tokens | Session freezes and dies at 100% |
 | Rate limit | Shared per API key | Requests slow down, then fail |
 | Disk | Container-dependent | Writes fail, processes crash |
